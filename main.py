@@ -71,19 +71,22 @@ def two_units_fight(unit1, unit2):
     """Проводим бой между двумя персонажами. Если здоровье одного персонажа
     достигает 0, бой завершается. Возвращаем победителя и кол-во раундов.
     """
-    cur_round = 0
+
     while True:
-        cur_round += 1
-        print(clr.Fore.YELLOW + f'Раунд {cur_round}.')
+        round_damage = 0
+        print(clr.Fore.YELLOW + f'Раунд {new_battle.rounds + 1}.')
         print(clr.Style.RESET_ALL, end='')
-        unit1.attack_enemy(unit2)
-        if unit2.current_hp <= 0:
+        round_damage += unit1.attack_enemy(unit2)
+        if unit2.is_dead:
+            new_battle.update_battle_info(1, round_damage, unit1)
             left_persons.remove(unit2)
-            return unit1, cur_round
-        unit2.attack_enemy(unit1)
-        if unit1.current_hp <= 0:
+            return unit1, new_battle.rounds
+        round_damage += unit2.attack_enemy(unit1)
+        if unit1.is_dead:
+            new_battle.update_battle_info(1, round_damage, unit2)
             left_persons.remove(unit1)
-            return unit2, cur_round
+            return unit2, new_battle.rounds
+        new_battle.update_battle_info(1, round_damage)
 
 
 # Создаем предметы и показываем список созданных, отсоритрованный по защите.
@@ -120,9 +123,10 @@ for el in persons:
         print(f'\t\t{j}. {t.item_type}, {t.item_name}, {t.item_attack}, '
               + f'{t.item_defence_pct:.0%}, '
               + f'{t.item_hit_point}')
-
+print()
 left_persons = persons[:]
 battle_num = 0
+new_tournament = md.Tournament('Новый турнир')
 while len(left_persons) > 1:
     battle_num += 1
     # Персонажи, доступные для выбора являются копией оставшихся персонажей'
@@ -133,14 +137,32 @@ while len(left_persons) > 1:
     unit2 = rnd.choice(persons_to_select)
     # Проводим бой. Описываем ход боя
     txt = f'\nНачинается бой {battle_num} между:\n\t1. {unit1}\n\t2. {unit2}'
-    print(clr.Fore.BLUE + txt)
-    print(clr.Style.RESET_ALL, end='')
+    print(clr.Fore.BLUE + txt + clr.Style.RESET_ALL, end='')
     # Результаты боя
+    new_battle = md.Battle(battle_num, unit1, unit2)
     battle_results = two_units_fight(unit1, unit2)
+    new_tournament.update_tournament_info(new_battle)
     txt = f'В {battle_results[1]} раунде победу одержал: {battle_results[0]}'
-    print(clr.Fore.RED + txt)
-    print(clr.Style.RESET_ALL)
+    print(clr.Fore.RED + txt + clr.Style.RESET_ALL)
     # Восстанвливаем здоровье победителя после боя
     battle_results[0].restore_health()
     print(f'Осталось бойцов: {len(left_persons)}')
+# Отображаем результаты турнира
+print(f'\nСтатистика турнира: {new_tournament.name}')
 print(clr.Fore.GREEN + f'Победитель турнира {left_persons[0]}')
+# Отображаем статистику бойцов
+print(clr.Fore.RED + 'Статистика бойцов:')
+persons.sort(key=lambda person: -person.wins)
+persons.sort(key=lambda person: person.loses)
+for pers in persons:
+    print(clr.Fore.BLUE + f'{pers}.\n'
+          + clr.Fore.BLACK + f'Побед: {pers.wins}| Поражений: {pers.loses}| '
+          + f'Урон нанесен: {pers.damage_made:.2f}| '
+          + f'Урон получен: {pers.damage_get:.2f}')
+# Отображаем статистику боев
+print(clr.Fore.RED + 'Статистика боев:')
+for el in new_tournament.battles:
+    print(clr.Fore.BLUE + f'{el.battle_num}. {el.pers1.name} vs '
+          + f'{el.pers2.name}. ', end='')
+    print(clr.Fore.YELLOW + f'Раундов: {el.rounds}, '
+          + f'всего урона: {el.damage:.2f}')

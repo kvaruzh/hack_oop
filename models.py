@@ -29,12 +29,24 @@ class Person():
         self.person_hp = person_hp
         self.person_attack = person_attack
         self.person_defence_pct = person_defence_pct
-        self.set_total_params(self.person_attack, self.person_defence_pct,
-                              self.person_hp)
-        self.restore_health()
+        self.wins = 0
+        self.loses = 0
+        self.damage_made = 0
+        self.damage_get = 0
+        self.is_dead = False
+
+    def update_stats(self, wins: int = 0, loses: int = 0,
+                     damage_made: float = 0, damage_get: float = 0):
+        """Обновляем статистику по персонажа: побед в боях, поражений в боях,
+        нанесенный урон, полученный урон
+        """
+        self.wins += wins
+        self.loses += loses
+        self.damage_made += damage_made
+        self.damage_get += damage_get
 
     def set_total_params(self, attack, defence, hp):
-        """Приравниваем итоговые параметры переданным.
+        """Записываем итоговые параметры. Значения с учетом бонысов от предметов и т.п.
         """
         self.person_total_attack = attack
         self.person_total_hp = hp
@@ -70,21 +82,31 @@ class Person():
             self.change_parameters(item)
 
     def take_damage(self, attack_damage: float):
-        """Получаем урон
+        """Получаем урон. Если урон превышает оставшуюся жизнь,
+        приравниваем оставшуюся жизнь к 0.
         """
+        loss = 0
         damage = attack_damage - attack_damage * self.person_total_defence_pct
         if damage >= self.current_hp:
             self.set_current_hp(-self.current_hp)
+            self.is_dead = True
+            loss = 1
         else:
             self.set_current_hp(-damage)
+        self.update_stats(loses=loss, damage_get=damage)
         return damage
 
     def attack_enemy(self, enemy):
         """Проводим атаку по указанному врагу
         """
+        win = 0
         dam = enemy.take_damage(self.person_total_attack)
         print(f'{self.name} наносит урон {dam:.2f} по {enemy.name}. '
               + f'Осталось {enemy.current_hp:.2f} HP')
+        if enemy.current_hp <= 0:
+            win = 1
+        self.update_stats(wins=win, damage_made=dam)
+        return dam
 
     def __str__(self):
         return (f'{self.person_type} - {self.name}; '
@@ -105,8 +127,8 @@ class Paladin(Person):
         self.person_hp = self.person_hp * 2
         self.person_defence_pct = self.person_defence_pct * 2
         self.set_total_params(self.person_attack,
-                              self.person_total_defence_pct,
-                              self.person_total_hp)
+                              self.person_defence_pct,
+                              self.person_hp)
         self.restore_health()
 
 
@@ -120,6 +142,38 @@ class Warrior(Person):
         self.person_type = person_type
         self.person_attack = self.person_attack * 2
         self.set_total_params(self.person_attack,
-                              self.person_total_defence_pct,
-                              self.person_total_hp)
+                              self.person_defence_pct,
+                              self.person_hp)
         self.restore_health()
+
+
+class Battle():
+    def __init__(self, battle_num: int, pers1: Person, pers2: Person):
+        self.battle_num = battle_num
+        self.pers1 = pers1
+        self.pers2 = pers2
+        self.rounds = 0
+        self.damage = 0
+        self.winner = None
+
+    def update_battle_info(self, round_num: int = 0, damages: float = 0,
+                           winner=None):
+        self.rounds += round_num
+        self.damage += damages
+        self.winner = winner
+
+    def __str__(self):
+        return (f'{self.pers1}\n{self.pers2}\nРаундов: {self.rounds}, '
+                + f'Всего урона: {self.damage}')
+
+
+class Tournament():
+    def __init__(self, name: str):
+        self.name = name
+        self.battles = []
+
+    def update_tournament_info(self, battle: Battle):
+        self.battles.append(battle)
+
+    def __str__(self):
+        return f'{self.name}'
