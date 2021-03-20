@@ -148,6 +148,8 @@ class Warrior(Person):
 
 
 class Battle():
+    """Класс с информацией о боях результаты боев.
+    """
     def __init__(self, battle_num: int, pers1: Person, pers2: Person):
         self.battle_num = battle_num
         self.pers1 = pers1
@@ -158,6 +160,9 @@ class Battle():
 
     def update_battle_info(self, round_num: int = 0, damages: float = 0,
                            winner=None):
+        """Обновляем информацию о бое. Можно использовать для обновления во время боя,
+        можно обновлять только в конце боя
+        """
         self.rounds += round_num
         self.damage += damages
         self.winner = winner
@@ -168,11 +173,15 @@ class Battle():
 
 
 class Tournament():
+    """Класс с информацией о турнире.
+    """
     def __init__(self, name: str):
         self.name = name
         self.battles = []
 
     def update_tournament_info(self, battle: Battle):
+        """Обновляем информацию о турнире. Добавляем завершившийся бой
+        """
         self.battles.append(battle)
 
     def __str__(self):

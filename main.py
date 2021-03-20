@@ -71,22 +71,22 @@ def two_units_fight(unit1, unit2):
     """Проводим бой между двумя персонажами. Если здоровье одного персонажа
     достигает 0, бой завершается. Возвращаем победителя и кол-во раундов.
     """
-
+    cur_round = 0
+    total_damage = 0
     while True:
-        round_damage = 0
-        print(clr.Fore.YELLOW + f'Раунд {new_battle.rounds + 1}.')
+        cur_round += 1
+        print(clr.Fore.YELLOW + f'Раунд {cur_round}.')
         print(clr.Style.RESET_ALL, end='')
-        round_damage += unit1.attack_enemy(unit2)
+        total_damage += unit1.attack_enemy(unit2)
         if unit2.is_dead:
-            new_battle.update_battle_info(1, round_damage, unit1)
+            new_battle.update_battle_info(cur_round, total_damage, unit1)
             left_persons.remove(unit2)
-            return unit1, new_battle.rounds
-        round_damage += unit2.attack_enemy(unit1)
+            return unit1, cur_round
+        total_damage += unit2.attack_enemy(unit1)
         if unit1.is_dead:
-            new_battle.update_battle_info(1, round_damage, unit2)
+            new_battle.update_battle_info(cur_round, total_damage, unit2)
             left_persons.remove(unit1)
-            return unit2, new_battle.rounds
-        new_battle.update_battle_info(1, round_damage)
+            return unit2, cur_round
 
 
 # Создаем предметы и показываем список созданных, отсоритрованный по защите.
